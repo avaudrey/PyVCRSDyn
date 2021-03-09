@@ -175,6 +175,7 @@ print(h_v)
 # def L_length(self):
 #   return
 
+"""  Class transient is commented 
 class transient:
   
   def __init__(self,alpha_in, alpha_out, Total_Lenght_L, Lenght_l):
@@ -195,3 +196,4 @@ class transient:
     z44=
     z51=
     z55=
+"""
