@@ -308,24 +308,27 @@ y = odeint(lambda Z,t: test.model(Z,t), z0,t)
 #plot results
 # plt.plot(t,y[:,0],'ko--',linewidth = 0.1)
 #plt.subplot(151)
-plt.plot(t,y[:,0],'cs-',linewidth = 2.5)
+'''plt.plot(t,y[:,0],'cs-',linewidth = 2.5)
 plt.ylabel('Pressure [Pa]')
 plt.xlabel('Time [sec]')
 plt.title('Pressure vs. Time')
+plt.ylim(240_000,250_000)
 
-'''plt.subplot(152)
+plt.subplot(152)
 plt.plot(t,y[:,1],'cs-',linewidth = 2.5)
 plt.ylabel('Outlet enthalpy [J/kg]')
 plt.xlabel('Time [sec]')
-plt.title('Out Enthalpy vs. Time')
+plt.title('Out Enthalpy vs. Time')'''
 
-plt.subplot(153)
+
 plt.plot(t,y[:,2],'cs-',linewidth = 2.5)
-plt.ylabel(r'$\ell$ [m]')
+plt.ylabel('$\ell$ [m]')
 plt.xlabel('Time [sec]')
 plt.title('Two phase length vs. Time')
+plt.ylim(4,5)
+plt.xticks(range(0, 11))
 
-plt.subplot(154)
+'''plt.subplot(154)
 plt.plot(t, y[:, 3],'cs-',linewidth = 2.5)
 plt.ylabel('Exterior Pressure [Pa]')
 plt.xlabel('Time [sec]')
