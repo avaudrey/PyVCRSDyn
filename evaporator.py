@@ -209,8 +209,8 @@ h_4 = 256409.24455736773 # este valor es una constante??? Pues no!!!!
 Aex = np.pi * d_in * ducto_total.length
 Tcaliente_in = 40 + 273.15
 m_ref = 0.27034739892528964
-mdot_4 = m_ref
-mdot_1 = m_ref
+# mdot_4 = m_ref
+# mdot_1 = m_ref
 m_ine = m_water
 m_oe = m_water
 p_ext = 300_000
@@ -221,6 +221,8 @@ alpha_TP_in = 11011.778404079098
 alpha_SH_out = 8109.623096189451
 alpha_TP_out = alpha_SH_out
 
+tau =2 
+
 class transient:
   
     def __init__(self,alpha_SH, alpha_TP, Total_Lenght_L, Lenght_l,Void_fraction):
@@ -230,7 +232,7 @@ class transient:
         self.Lenght_l = Lenght_l
         self.Void_fraction = Void_fraction
   
-    def model(self,Z,t): 
+    def model(self,Z,t,mdot_1): 
         H_g = ( fluid(fluido1,Z[0]).h_v() + Z[1] ) / 2 
         T_g = cp.PropsSI('T','P',Z[0],'H',H_g,fluido1)
         T_4 = cp.PropsSI('T','P',Z[0],'Q',0,fluido1)
@@ -264,10 +266,10 @@ class transient:
            + 0.5 * Rho_g * fluid(fluido1,Z[0]).dHv_dP() - 1 ) * ducto_total.cross_sectional_area * (ducto_total.length - Z[1]) 
         z52 = ( 0.5 * fluid(fluido1,Z[0]).dRho_dP(H_g) * (H_g - fluid(fluido1,Z[0]).h_v()) + 0.5 * Rho_g) * ducto_total.cross_sectional_area * (ducto_total.length - Z[1])
         z53 = ( Z[0] + Rho_g * ( fluid(fluido1,Z[0]).h_v() - H_g ) ) * ducto_total.cross_sectional_area
-        f1 = mdot_4-mdot_1
+        f1 = Z[5]-mdot_1
         f2 = m_ine-m_oe
         f3 = Q_total - m_ine * h_hi + m_oe * Z[4] #Revisar la convencion de signos de todas las ecuaciones :(
-        f4 = Q_l + mdot_4 * (h_4 - fluid(fluido1,Z[0]).h_v())
+        f4 = Q_l + Z[5] * (h_4 - fluid(fluido1,Z[0]).h_v())
         f5 = Q_Ll + mdot_1 * ( fluid(fluido1,Z[0]).h_v() - Z[1] )
 
         dPdt = f1*z42*z53/(z11*z42*z53 - z12*z41*z53 + z13*z41*z52 - z13*z42*z51) \
@@ -286,7 +288,9 @@ class transient:
 
         dh_hodt= (-f2*z34)/(z24*z35-z25*z34) + (f3*z24)/(z24*z35-z25*z34)
 
-        return [dPdt,dH_outdt,dldt, dPexdt, dh_hodt]
+        dmdot_4dt = (mdot_1 - Z[5])/tau 
+
+        return [dPdt,dH_outdt,dldt, dPexdt, dh_hodt, dmdot_4dt]
   
   # initial condition
 p0 = 243342.36987785524
@@ -294,49 +298,62 @@ h_out0 = 404367.02095548273
 l_0 = 4.3806496889366455
 Pex0= 300_000
 h_ho0= 127792.33926518963
+mdot_40 = m_ref
 
-z0=[p0, h_out0, l_0, Pex0, h_ho0]
+z0=[p0, h_out0, l_0, Pex0, h_ho0, mdot_40]
+
+# Number of points
+n =101
 
 # time points
-t = np.linspace(0,10)
+t = np.linspace(0,(n-1)/10,n)
+
+# step input
+mdot_1 = np.zeros(n)
+mdot_1[0:]=m_ref
+# change to 0.3 at time = 5.0
+mdot_1[11:] = 0.3
 
 test=transient(1744.307640564927, 7757.236902536498,0.8808487889318191 + 4.421219527097692,1.0973653460950592, 2)
 
+# store solution
+P = np.empty_like(t)
+H_out = np.empty_like(t)
+l = np.empty_like(t)
+Pex= np.empty_like(t)
+h_ho = np.empty_like(t)
+mdot_4 = np.empty_like(t)
+
+# record initial conditions
+P[0] = z0[0]
+H_out[0] = z0[1]
+l[0] =z0[2]
+Pex[0]= z0[3]
+h_ho[0] =z0[4]
+mdot_4[0] =z0[5]
+
 # solve ODE
-y = odeint(lambda Z,t: test.model(Z,t), z0,t)
+for i in range(1,n):
+    # span for next time step
+    tspan = [t[i-1],t[i]]
+    # solve for next step
+    Z = odeint(test.model,z0,tspan,args=(mdot_1[i],))
+    # store solution for plotting
+    P[i] = Z[1][0]
+    H_out[i] = Z[1][1]
+    l[i] = Z[1][2]
+    Pex[i] = Z[1][3]
+    h_ho[i] = Z[1][4]
+    mdot_4[i] = Z[1][5]
+    # next initial condition
+    z0 = Z[1]
 
-#plot results
-# plt.plot(t,y[:,0],'ko--',linewidth = 0.1)
-#plt.subplot(151)
-'''plt.plot(t,y[:,0],'cs-',linewidth = 2.5)
-plt.ylabel('Pressure [Pa]')
-plt.xlabel('Time [sec]')
-plt.title('Pressure vs. Time')
-plt.ylim(240_000,250_000)
-
-plt.subplot(152)
-plt.plot(t,y[:,1],'cs-',linewidth = 2.5)
-plt.ylabel('Outlet enthalpy [J/kg]')
-plt.xlabel('Time [sec]')
-plt.title('Out Enthalpy vs. Time')'''
-
-
-plt.plot(t,y[:,2],'cs-',linewidth = 2.5)
-plt.ylabel('$\ell$ [m]')
-plt.xlabel('Time [sec]')
-plt.title('Two phase length vs. Time')
-plt.ylim(4,5)
-plt.xticks(range(0, 11))
-
-'''plt.subplot(154)
-plt.plot(t, y[:, 3],'cs-',linewidth = 2.5)
-plt.ylabel('Exterior Pressure [Pa]')
-plt.xlabel('Time [sec]')
-plt.title('Exterior Pressure vs. Time')
-
-plt.subplot(155)
-plt.plot(t,y[:, 4],'cs-',linewidth = 2.5)
-plt.ylabel('Exterior Outlet Enthalpy [J/kg]')
-plt.xlabel('Time [sec]')
-plt.title('Exterior Outlet Enthalpy vs Time')'''
+# plot results
+"""plt.plot(t,mdot_1,'g:',label='u(t)')
+plt.plot(t,P,'b-',label='x(t)')
+plt.plot(t,H_out,'r--',label='y(t)')"""
+plt.plot(t,l)
+"""plt.ylabel('values')
+plt.xlabel('time')
+plt.legend(loc='best')"""
 plt.show()
