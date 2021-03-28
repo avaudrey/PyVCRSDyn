@@ -221,7 +221,7 @@ alpha_TP_in = 11011.778404079098
 alpha_SH_out = 8109.623096189451
 alpha_TP_out = alpha_SH_out
 
-tau =2 
+tau =0.3 
 
 class transient:
   
@@ -250,39 +250,37 @@ class transient:
         Q_Ll = Heat_transfer(alpha_SH_in,alpha_SH_out,ducto_total.length-Z[2],Tc_l,Tcaliente_in,Tf_out,T_4).Heat()
         Q_total = Q_l + Q_Ll
 
-        z11 = ( (self.Void_fraction * fluid(fluido1,Z[0]).dRhov_dP()) * ducto_total.cross_sectional_area * Z[2] /
-           - ducto_total.cross_sectional_area * (ducto_total.length-Z[2]) * (fluid(fluido1,Z[0]).dRho_dP(H_g) + 0.5 * fluid(fluido1,Z[0]).dRho_dH(H_g) *fluid(fluido1,Z[0]).dHv_dP()))    
-        z12 = ducto_total.cross_sectional_area*(ducto_total.length-Z[2])*0.5
-        z13 = (self.Void_fraction*fluid(fluido1,Z[0]).Rho_v()+(1-self.Void_fraction) * fluid(fluido1,Z[0]).Rho_l())*ducto_total.cross_sectional_area + Rho_g * ducto_total.cross_sectional_area 
+        z11 = ( (self.Void_fraction * fluid(fluido1,Z[0]).dRhov_dP()+(1-self.Void_fraction)*fluid(fluido1,Z[0]).dRhol_dP())) * ducto_total.cross_sectional_area * Z[2] \
+           + ducto_total.cross_sectional_area * (ducto_total.length-Z[2]) * (fluid(fluido1,Z[0]).dRho_dP(H_g) + 0.5 * fluid(fluido1,Z[0]).dRho_dH(H_g) *fluid(fluido1,Z[0]).dHv_dP())    
+        z12 = ducto_total.cross_sectional_area*(ducto_total.length-Z[2])*0.5*fluid(fluido1,Z[0]).dRho_dH(H_g)
+        z13 = (self.Void_fraction*fluid(fluido1,Z[0]).Rho_v()+(1-self.Void_fraction) * fluid(fluido1,Z[0]).Rho_l()-Rho_g)*ducto_total.cross_sectional_area  
         z24 = Aex * ducto_total.length * fluid(fluido2,Z[3],T_ex).dRho_dP(h_ex) # Ver lo de si entalpia o temperatura
         z25 = Aex * ducto_total.length * 0.5 * fluid(fluido2,Z[3],T_ex).dRho_dH(h_ex) # Ver lo de si entalpia o temperatura
         z34 = Aex * ducto_total.length * (h_ex * fluid(fluido2,Z[3],T_ex).dRho_dP(h_ex) - 1)
         z35 = 0.5 * Aex * ducto_total.length * (h_ex * fluid(fluido2,Z[3],T_ex).dRho_dH(h_ex) + fluid(fluido2,Z[3],T_ex).Rho())
-        z41 = ( self.Void_fraction * fluid(fluido1,Z[0]).dHv_dP() * fluid(fluido1,Z[0]).Rho_v() + (1-self.Void_fraction) * fluid(fluido1,Z[0]).dRhol_dP() \
-           - (1- self.Void_fraction) * fluid(fluido1,Z[0]).dHl_dP() * fluid(fluido1,Z[0]).Rho_l() - 1 ) * ducto_total.cross_sectional_area * Z[2]
-        z42 = ( self.Void_fraction * fluid(fluido1,Z[0]).Rho_v() * fluid(fluido1,Z[0]).h_v() + (1 - self.Void_fraction) * fluid(fluido1,Z[0]).Rho_l() * fluid(fluido1,Z[0]).h_l() \
-           - Z[0]) * ducto_total.length 
-        z51 = ( fluid(fluido1,Z[0]).dRho_dP(H_g) * (H_g - fluid(fluido1,Z[0]).h_v()) + fluid(fluido1,Z[0]).dRho_dH(H_g) * 0.5 * fluid(fluido1,Z[0]).dHv_dP() * (1 - fluid(fluido1,Z[0]).h_v()) \
-           + 0.5 * Rho_g * fluid(fluido1,Z[0]).dHv_dP() - 1 ) * ducto_total.cross_sectional_area * (ducto_total.length - Z[1]) 
-        z52 = ( 0.5 * fluid(fluido1,Z[0]).dRho_dP(H_g) * (H_g - fluid(fluido1,Z[0]).h_v()) + 0.5 * Rho_g) * ducto_total.cross_sectional_area * (ducto_total.length - Z[1])
+        z41 = ( self.Void_fraction * fluid(fluido1,Z[0]).dHv_dP() * fluid(fluido1,Z[0]).Rho_v() + (1-self.Void_fraction) * fluid(fluido1,Z[0]).dRhol_dP()*(fluid(fluido1,Z[0]).h_l()-fluid(fluido1,Z[0]).h_v())+(1-self.Void_fraction)*fluid(fluido1,Z[0]).dHl_dP()*fluid(fluido1, Z[0]).Rho_l()-1)*ducto_total.cross_sectional_area*Z[2]   
+        z43 = ( (1-self.Void_fraction) * fluid(fluido1,Z[0]).Rho_l() * (fluid(fluido1,Z[0]).h_l()-fluid(fluido1,Z[0]).h_v())-Z[0])*ducto_total.cross_sectional_area 
+        z51 = ( fluid(fluido1,Z[0]).dRho_dP(H_g) * (H_g - fluid(fluido1,Z[0]).h_v()) + fluid(fluido1,Z[0]).dRho_dH(H_g) * 0.5 * fluid(fluido1,Z[0]).dHv_dP() * (H_g-fluid(fluido1,Z[0]).h_v()) \
+           + 0.5 * Rho_g * fluid(fluido1,Z[0]).dHv_dP() - 1 ) * ducto_total.cross_sectional_area * (ducto_total.length - Z[2]) 
+        z52 = ( 0.5 * fluid(fluido1,Z[0]).dRho_dP(H_g) * (H_g - fluid(fluido1,Z[0]).h_v()) + 0.5 * Rho_g) * ducto_total.cross_sectional_area * (ducto_total.length - Z[2])
         z53 = ( Z[0] + Rho_g * ( fluid(fluido1,Z[0]).h_v() - H_g ) ) * ducto_total.cross_sectional_area
         f1 = Z[5]-mdot_1
         f2 = m_ine-m_oe
-        f3 = Q_total - m_ine * h_hi + m_oe * Z[4] #Revisar la convencion de signos de todas las ecuaciones :(
+        f3 = -Q_total + m_ine * h_hi - m_oe * Z[4] #Revisar la convencion de signos de todas las ecuaciones :(
         f4 = Q_l + Z[5] * (h_4 - fluid(fluido1,Z[0]).h_v())
         f5 = Q_Ll + mdot_1 * ( fluid(fluido1,Z[0]).h_v() - Z[1] )
 
-        dPdt = f1*z42*z53/(z11*z42*z53 - z12*z41*z53 + z13*z41*z52 - z13*z42*z51) \
-            + f4*(-z12*z53 + z13*z52)/(z11*z42*z53 - z12*z41*z53 + z13*z41*z52 - z13*z42*z51) \
-            - f5*z13*z42/(z11*z42*z53 - z12*z41*z53 + z13*z41*z52 - z13*z42*z51)
+        dPdt = f1*z43*z52/(z11*z43*z52 + z12*z41*z53 - z12*z43*z51 - z13*z41*z52) \
+            + f4*(z12*z53 - z13*z52)/(z11*z43*z52 + z12*z41*z53 - z12*z43*z51 - z13*z41*z52) \
+            - f5*z12*z43/(z11*z43*z52 + z12*z41*z53 - z12*z43*z51 - z13*z41*z52)
 
-        dH_outdt = -f1*z41*z53/(z11*z42*z53 - z12*z41*z53 + z13*z41*z52 - z13*z42*z51) \
-            + f4*(z11*z53 - z13*z51)/(z11*z42*z53 - z12*z41*z53 + z13*z41*z52 - z13*z42*z51) \
-                + f5*z13*z41/(z11*z42*z53 - z12*z41*z53 + z13*z41*z52 - z13*z42*z51)
+        dH_outdt = f1*(z41*z53-z43*z51)/(z11*z43*z52 + z12*z41*z53 - z12*z43*z51 - z13*z41*z52) \
+            + f4*(-z11*z53 + z13*z51)/(z11*z43*z52 + z12*z41*z53 - z12*z43*z51 - z13*z41*z52) \
+                + f5*(z11*z43-z13*z41)/(z11*z43*z52 + z12*z41*z53 - z12*z43*z51 - z13*z41*z52)
 
-        dldt = f1*(z41*z52-z42*z51)/(z11*z42*z53 - z12*z41*z53 + z13*z41*z52 - z13*z42*z51) \
-            + f4*(-z11*z52 - z12*z51)/(z11*z42*z53 - z12*z41*z53 + z13*z41*z52 - z13*z42*z51) \
-                + f5*(z11*z42-z12*z41)/(z11*z42*z53 - z12*z41*z53 + z13*z41*z52 - z13*z42*z51)
+        dldt = -f1*(z41*z52)/(z11*z43*z52 + z12*z41*z53 - z12*z43*z51 - z13*z41*z52) \
+            + f4*(z11*z52 - z12*z51)/(z11*z43*z52 + z12*z41*z53 - z12*z43*z51 - z13*z41*z52) \
+                + f5*(z12*z41)/(z11*z43*z52 + z12*z41*z53 - z12*z43*z51 - z13*z41*z52)
 
         dPexdt = (f2*z35)/(z24*z35-z25*z34) - (f3*z25)/(z24*z35-z25*z34)
 
@@ -303,7 +301,7 @@ mdot_40 = m_ref
 z0=[p0, h_out0, l_0, Pex0, h_ho0, mdot_40]
 
 # Number of points
-n =101
+n =141
 
 # time points
 t = np.linspace(0,(n-1)/10,n)
@@ -312,9 +310,9 @@ t = np.linspace(0,(n-1)/10,n)
 mdot_1 = np.zeros(n)
 mdot_1[0:]=m_ref
 # change to 0.3 at time = 5.0
-mdot_1[11:] = 0.3
+mdot_1[45:] = 0.27
 
-test=transient(1744.307640564927, 7757.236902536498,0.8808487889318191 + 4.421219527097692,1.0973653460950592, 2)
+test=transient(1744.307640564927, 7757.236902536498,0.8808487889318191 + 4.421219527097692,1.0973653460950592, 0.41)
 
 # store solution
 P = np.empty_like(t)
@@ -349,11 +347,11 @@ for i in range(1,n):
     z0 = Z[1]
 
 # plot results
-"""plt.plot(t,mdot_1,'g:',label='u(t)')
+"""plt.plot(t,mdot_1,'g:',label='u(t)')"""
 plt.plot(t,P,'b-',label='x(t)')
-plt.plot(t,H_out,'r--',label='y(t)')"""
+"""plt.plot(t,H_out,'r--',label='y(t)')
 plt.plot(t,l)
-"""plt.ylabel('values')
+plt.ylabel('values')
 plt.xlabel('time')
 plt.legend(loc='best')"""
 plt.show()
